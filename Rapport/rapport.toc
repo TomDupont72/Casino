@@ -7,4 +7,4 @@
 \contentsline {subsection}{\numberline {2.4}Test du $\chi ^2$}{8}{subsection.2.4}%
 \contentsline {subsection}{\numberline {2.5}ANOVA}{8}{subsection.2.5}%
 \contentsline {subsection}{\numberline {2.6}Analyse factorielle des correspondances}{9}{subsection.2.6}%
-\contentsline {section}{\numberline {3}Conclusion}{12}{section.3}%
+\contentsline {section}{\numberline {3}Conclusion}{11}{section.3}%
