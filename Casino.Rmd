@@ -1,0 +1,107 @@
+---
+title: "Casino"
+author: "Tom Dupont"
+date: "2023-10-25"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ellipse)
+library(FactoMineR)
+library(scatterplot3d)
+library(xtable)
+library(MASS)
+library(Factoshiny)
+library(factoextra)
+library(ggpubr)
+library(dplyr)
+library(corrplot)
+```
+
+```{r}
+casino <- read.csv2(file.choose(), row.names=1, sep=";")
+```
+
+```{r}
+casino
+```
+
+```{r}
+groupe <- as.factor(casino$Moderateur)
+casino_slice <- casino[,1:6]
+res.pca <- PCA(casino_slice, scale.unit = TRUE, ncp = 5, graph = TRUE)
+fviz_pca_var(res.pca, col.var="cos2", gradient.cols = "blue", title = NULL)
+fviz_pca_ind(res.pca, geom.ind ="point", col.ind = groupe, legend.title = "Modérateur", xlim = c(-5,25), ylim = c(-25,15), select.ind = list(cos2 = 0.5))
+fviz_eig(res.pca, addlabels = TRUE, ylim = c(0, 50))
+```
+
+```{r}
+res.pca <- PCA(casino, graph = FALSE)
+km.res <- kmeans(res.pca$ind$coord[,1:2], 2, nstart = 100)
+fviz_cluster(km.res, data = res.pca$ind$coord[,1:2], geom = "point", xlim = c(-5,25), ylim = c(-25,15), ellipse = FALSE, main = NULL)
+
+```
+
+```{r}
+cor(casino[,1:6])
+model <- lda(casino[,1:6], casino$Moderateur)
+pred.lda <- predict(model)
+lda.data <- cbind(casino, predict(model)$x)
+ggplot(lda.data, aes(LD1, LD1)) + geom_point(aes(color = Moderateur))
+```
+```{r}
+X.squared <- 0
+pvalue <- 0
+n <- 100
+for (i in 1:n) {
+  pari_sans_moderateur <- casino[casino$Moderateur == 0, "Pari"]
+  pari_sans_moderateur <- sample(pari_sans_moderateur, 139, replace = FALSE)
+  pari_sans_moderateur <- sum(pari_sans_moderateur)
+  pari_avec_moderateur <- sum(casino[casino$Moderateur == 1, "Pari"])
+  T = c(pari_sans_moderateur[1],pari_avec_moderateur[1])
+  Xsq <- chisq.test(T)
+  X.squared <- Xsq$statistic + X.squared
+  pvalue <- Xsq$p.value + pvalue
+}
+X.squared/n
+pvalue/n
+```
+```{r}
+
+paris <- casino[casino$Pari <= 10, "Pari"]
+min(paris)
+
+plot(density(casino$Joueurs))
+plot(density(casino$Argent))
+hist(paris, breaks = seq(from = 0, to = 10, by = 0.1))
+plot(density(paris))
+plot(density(casino$Victoire))
+```
+
+```{r}
+pari_sans_moderateur <- casino[casino$Moderateur == 0, "Pari"]
+pari_sans_moderateur <- sample(pari_sans_moderateur, 139, replace = FALSE)
+pari_avec_moderateur <- casino[casino$Moderateur == 1, "Pari"]
+groupe_sans_moderateur <- rep(0, length(pari_sans_moderateur))
+groupe_avec_moderateur <- rep(1, length(pari_avec_moderateur))
+casino_reduit <- data.frame(Pari = c(pari_avec_moderateur, pari_sans_moderateur), Moderateur = c(groupe_avec_moderateur, groupe_sans_moderateur))
+fit <- aov(Pari~ Moderateur, casino_reduit)
+summary(fit)
+```
+```{r}
+res.ca <- CA(casino_slice, ncp = 3, graph = TRUE)
+groupe <- as.factor(casino$Moderateur)
+eig.val <- get_eigenvalue (res.ca)
+fviz_eig(res.ca) 
+row <- get_ca_row(res.ca) 
+groupe <- as.factor(casino$Moderateur)
+fviz_ca_biplot(res.ca, geom = "point", col.row = groupe, legend.title = "Modérateur", map = "colgreen", xlim = c(-0.01,0.1), ylim = c(-0.05,0.05))
+fviz_ca_col(res.ca)
+```
+
